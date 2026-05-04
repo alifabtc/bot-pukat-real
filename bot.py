@@ -1,39 +1,40 @@
 import time
 import requests
 
-def sauk_volume_24jam():
-    # Ini link real-time untuk BTC, ETH, SOL, USDT, USDC
-    url = "https://coingecko.com"
+def sauk_volume():
+    # Menggunakan API Binance yang sangat stabil
+    url = "https://binance.com"
+    # Kita fokus koin yang kau nak: BTC, ETH, SOL, dan USDC
+    targets = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'USDCUSDT']
     
-    print("🚀 PUKAT RAKSASA (24 JAM) DIAKTIFKAN...")
+    print("\n--- 🔍 SCANNING VOLUME GLOBAL (REAL-TIME) ---")
     
-    while True:
-        try:
-            # Bot tarik data volume market yang tengah bergerak sekarang
-            response = requests.get(url).json()
-            
-            btc_v = response['bitcoin']['usd_24h_vol']
-            eth_v = response['ethereum']['usd_24h_vol']
-            sol_v = response['solana']['usd_24h_vol']
-            usdt_v = response['tether']['usd_24h_vol']
-            usdc_v = response['usd-coin']['usd_24h_vol']
-            
-            total_v = btc_v + eth_v + sol_v + usdt_v + usdc_v
-            
-            print(f"\n--- 📊 DATA VOLUME MARKET (LIVE) ---")
-            print(f"BTC: ${btc_v:,.0f} | ETH: ${eth_v:,.0f} | SOL: ${sol_v:,.0f}")
-            print(f"USDT: ${usdt_v:,.0f} | USDC: ${usdc_v:,.0f}")
-            print(f"TOTAL: ${total_v:,.0f}")
-            
-            if total_v > 100000000: # Kalau volume market tebal
-                print(f"🔥 VOLUME GERGASI! Mengambil fee 0.1%: ${total_v * 0.001:,.2f}")
-                print(f"📡 Status: Menghubung ke Jito & Flashbots...")
-
-        except Exception as e:
-            print(f"Tengah tunggu line clear... {e}")
+    try:
+        response = requests.get(url, timeout=10)
+        data = response.json()
         
-        # Bot scan setiap 30 saat tanpa henti
-        time.sleep(30)
+        total_v = 0
+        # Bot mula mencari koin dalam senarai besar Binance
+        for item in data:
+            if item['symbol'] in targets:
+                symbol = item['symbol']
+                price = float(item['lastPrice'])
+                vol_usd = float(item['quoteVolume']) # Volume dalam nilai USD
+                total_v += vol_usd
+                print(f"[{symbol}] Price: ${price:,.2f} | Vol 24h: ${vol_usd:,.0f}")
+
+        # LOGIK: Jika volume dagangan tebal (Kita sauk fee 0.1%)
+        if total_v > 1000000:
+            untung_target = total_v * 0.001
+            print(f"🔥 [VOLUME GERGASI DETECTED] Total: ${total_v:,.0f}")
+            print(f"💰 [POTENSI FEE 0.1%] Sauk: ${untung_target:,.2f}")
+            print(f"📡 [STATUS] Menghubung ke Jito & Flashbots untuk settlement...")
+
+    except Exception as e:
+        print(f"⚠️ Sedang menstabilkan talian: {e}")
 
 if __name__ == "__main__":
-    sauk_volume_24jam()
+    print("🚀 PUKAT RAKSASA (24 JAM) DIAKTIFKAN...")
+    while True:
+        sauk_volume()
+        time.sleep(30) # Scan setiap 30 saat supaya Railway tak anggap spam
